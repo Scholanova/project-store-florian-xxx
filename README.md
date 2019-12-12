@@ -9,7 +9,7 @@ On parle d'un projet de gestion d'inventaire de magasins.
 - [x] Pouvoir créer des magasins valides (avec un nom non vide)
 - [x] Pouvoir visualiser un magasin existant
 - [x] Pouvoir supprimer un magasin existant
-- [ ] BONUS Pouvoir mettre à jour un magasin existant (modifier son nom)
+- [x] BONUS Pouvoir mettre à jour un magasin existant (modifier son nom)
 
 ### Partie 2
 - [ ] Pouvoir ajouter des objets en stock à un magasin (nom non vide, valeur non vide et > 0)
