@@ -61,7 +61,8 @@ public class StoreRepository {
         }
     }
 
-	public int deleteById(Integer id) {
+	public void deleteById(Integer id) throws ModelNotFoundException {
+					
 		String query = "DELETE " +
 				"FROM STORES " +
                 "WHERE ID = :id";
@@ -69,7 +70,10 @@ public class StoreRepository {
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("id", id);
         
-        return jdbcTemplate.update(query, parameters);
+        int nbAffectedRow = jdbcTemplate.update(query, parameters);
+        
+        if ( nbAffectedRow == 0 ) 
+        	throw new ModelNotFoundException();
 	}
 
 	public int update(Store store) {

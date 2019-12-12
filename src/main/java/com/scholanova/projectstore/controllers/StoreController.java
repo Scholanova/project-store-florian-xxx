@@ -35,7 +35,13 @@ public class StoreController {
     
     @DeleteMapping(path = "/stores/{id}")
     public ResponseEntity<?> deleteStation(@PathVariable Integer id) {
-        return ResponseEntity.ok().body(storeService.delete(id));
+    	try {
+			storeService.delete(id);
+			return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
+		} catch (ModelNotFoundException e) {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("ModelNotFoundException");
+		}
+        
     }
 
     @PostMapping(path = "/stores")
@@ -50,7 +56,11 @@ public class StoreController {
     
     @PutMapping(path = "/stores")
     public ResponseEntity<?> putStation(@RequestBody Store store) {
-        return ResponseEntity.ok().body(storeService.update(store));
+    	try {
+	        return ResponseEntity.ok().body(storeService.update(store));
+	    } catch (ModelNotFoundException e) {
+	    	return ResponseEntity.badRequest().body("ModelNotFoundException");
+	    }
     }
     
     

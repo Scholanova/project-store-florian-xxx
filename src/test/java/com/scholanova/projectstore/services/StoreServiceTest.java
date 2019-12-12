@@ -1,5 +1,6 @@
 package com.scholanova.projectstore.services;
 
+import com.scholanova.projectstore.exceptions.ModelNotFoundException;
 import com.scholanova.projectstore.exceptions.StoreNameCannotBeEmptyException;
 import com.scholanova.projectstore.models.Store;
 import com.scholanova.projectstore.repositories.StoreRepository;
@@ -24,6 +25,37 @@ class StoreServiceTest {
     @BeforeEach
     void setUp() {
         storeService = new StoreService(storeRepository);
+    }
+    
+    @Test
+    void givenExistingStoreId_whenCallGetStoreById_thenReturnExistingStore() throws ModelNotFoundException, StoreNameCannotBeEmptyException {
+    	// GIVEN
+        Integer id = 1234;
+        String name = "BHV";
+        
+        Store existingStore = new Store(id, name);
+        when(storeRepository.getById(id)).thenReturn(existingStore);
+
+        // WHEN
+        Store returnedStore = storeService.get(id);
+
+        // THEN
+        verify(storeRepository, atLeastOnce()).getById(id);
+        assertThat(returnedStore).isEqualTo(existingStore);
+    }
+    
+    @Test
+    void givenNotExistingStoreId_whenCallGetStoreById_thenThrowModelNotFoundException() throws ModelNotFoundException, StoreNameCannotBeEmptyException {
+    	// GIVEN
+        Integer id = 1234;
+        
+        when(storeRepository.getById(id)).thenThrow(new ModelNotFoundException());
+        
+        // WHEN
+        // THEN
+        assertThrows(ModelNotFoundException.class, () -> {
+        	storeService.get(id);
+        });
     }
 
     @Test
@@ -59,5 +91,34 @@ class StoreServiceTest {
         // THEN
         verify(storeRepository, atLeastOnce()).create(correctStore);
         assertThat(returnedStore).isEqualTo(savedStore);
+    }
+    
+    @Test
+    void givenExistingStore_whenDeleted_thenNoException() throws ModelNotFoundException {
+    	// GIVEN
+        Integer id = 1234;
+        
+        doNothing().when(storeRepository).deleteById(id);
+        
+        // WHEN
+        storeService.delete(id);
+
+        // THEN
+        verify(storeRepository, atLeastOnce()).deleteById(id);
+    }
+    
+    @Test
+    void givenNotExistingStore_whenDeleted_thenNoException() throws ModelNotFoundException {
+    	// GIVEN
+        Integer id = 1234;
+        
+        doThrow(new ModelNotFoundException()).when(storeRepository).deleteById(id);
+        
+        // WHEN
+        // THEN
+        assertThrows(ModelNotFoundException.class, () -> {
+        	storeService.delete(id);
+        });
+        verify(storeRepository, atLeastOnce()).deleteById(id);
     }
 }

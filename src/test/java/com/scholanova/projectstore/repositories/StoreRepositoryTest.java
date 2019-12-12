@@ -14,6 +14,9 @@ import org.springframework.test.jdbc.JdbcTestUtils;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @SpringJUnitConfig(StoreRepository.class)
 @JdbcTest
 class StoreRepositoryTest {
@@ -75,6 +78,41 @@ class StoreRepositoryTest {
             assertThat(createdStore.getName()).isEqualTo(storeName);
         }
     }
+    
+    @Nested
+    class Test_delete {
+    	
+    	@Test
+        void whenDeleteStore_thenStoreIsNotDatabase() {
+            // GIVEN
+            String storeName = "Auchan";
+            Store existingStore = new Store(1234, storeName);
+            
+            insertStore(existingStore);
+            
+            // WHEN
+            deleteStore(existingStore);
+            
+            // THEN
+            assertThrows(ModelNotFoundException.class, () -> {
+            	storeRepository.getById(1234);
+            });
+        }
+    	
+    	@Test
+    	void whenDeleteNotExistingStore_thenThrowExceptionModuleNotFoundException() {
+    		// GIVEN
+            Integer id = 1234;
+            
+            
+            // WHEN
+            // THEN
+            assertThrows(ModelNotFoundException.class, () -> {
+            	storeRepository.deleteById(id);
+            });
+    	}
+    	
+    }
 
     private void insertStore(Store store) {
         String query = "INSERT INTO STORES " +
@@ -82,5 +120,11 @@ class StoreRepositoryTest {
                 "VALUES ('%d', '%s')";
         jdbcTemplate.execute(
                 String.format(query, store.getId(), store.getName()));
+    }
+    
+    private void deleteStore(Store store) {
+        String query = "DELETE FROM STORES " +
+                "WHERE id = %d ";
+        jdbcTemplate.execute(String.format(query, store.getId()));
     }
 }

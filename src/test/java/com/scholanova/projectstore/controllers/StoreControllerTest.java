@@ -1,5 +1,6 @@
 package com.scholanova.projectstore.controllers;
 
+import com.scholanova.projectstore.exceptions.ModelNotFoundException;
 import com.scholanova.projectstore.exceptions.StoreNameCannotBeEmptyException;
 import com.scholanova.projectstore.models.Store;
 import com.scholanova.projectstore.services.StoreService;
@@ -40,76 +41,142 @@ class StoreControllerTest {
 
     @Captor
     ArgumentCaptor<Store> createStoreArgumentCaptor;
+    
+    @Captor
+    ArgumentCaptor<Integer> getStoreArgumentCaptor;
 
-//    @Nested
-//    class Test_createStore {
 
-        @Test
-        void givenCorrectBody_whenCalled_createsStore() throws Exception {
-            // given
-            String url = "http://localhost:{port}/stores";
+    @Test
+    void givenCreateStoreURLCorrectBody_whenCalled_createsStore() throws Exception {
+        // given
+        String url = "http://localhost:{port}/stores";
 
-            Map<String, String> urlVariables = new HashMap<>();
-            urlVariables.put("port", String.valueOf(port));
+        Map<String, String> urlVariables = new HashMap<>();
+        urlVariables.put("port", String.valueOf(port));
 
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            String requestJson = "{" +
-                    "\"name\":\"Boulangerie\"" +
-                    "}";
-            HttpEntity<String> httpEntity = new HttpEntity<>(requestJson, headers);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        String requestJson = "{" +
+                "\"name\":\"Boulangerie\"" +
+                "}";
+        HttpEntity<String> httpEntity = new HttpEntity<>(requestJson, headers);
 
-            Store createdStore = new Store(123, "Boulangerie");
-            when(storeService.create(createStoreArgumentCaptor.capture())).thenReturn(createdStore);
+        Store createdStore = new Store(123, "Boulangerie");
+        when(storeService.create(createStoreArgumentCaptor.capture())).thenReturn(createdStore);
 
-            // When
-            ResponseEntity responseEntity = template.exchange(url,
-                    HttpMethod.POST,
-                    httpEntity,
-                    String.class,
-                    urlVariables);
+        // When
+        ResponseEntity responseEntity = template.exchange(url,
+                HttpMethod.POST,
+                httpEntity,
+                String.class,
+                urlVariables);
 
-            // Then
-            assertThat(responseEntity.getStatusCode()).isEqualTo(OK);
-            assertThat(responseEntity.getBody()).isEqualTo(
-                    "{" +
-                            "\"id\":123," +
-                            "\"name\":\"Boulangerie\"" +
-                            "}"
-            );
-            
-            Store storeToCreate = createStoreArgumentCaptor.getValue();
-            assertThat(storeToCreate.getName()).isEqualTo("Boulangerie");
-        }
+        // Then
+        assertThat(responseEntity.getStatusCode()).isEqualTo(OK);
+        assertThat(responseEntity.getBody()).isEqualTo(
+                "{" +
+                        "\"id\":123," +
+                        "\"name\":\"Boulangerie\"" +
+                        "}"
+        );
         
-        @Test
-        void givenWrongBody_whenCalled_notCreateStore() throws Exception {
-        	// given
-            String url = "http://localhost:{port}/stores";
+        Store storeToCreate = createStoreArgumentCaptor.getValue();
+        assertThat(storeToCreate.getName()).isEqualTo("Boulangerie");
+    }
+    
+    @Test
+    void givenCreateStoreURLWrongBody_whenCalled_notCreateStore() throws Exception {
+    	// given
+        String url = "http://localhost:{port}/stores";
 
-            Map<String, String> urlVariables = new HashMap<>();
-            urlVariables.put("port", String.valueOf(port));
+        Map<String, String> urlVariables = new HashMap<>();
+        urlVariables.put("port", String.valueOf(port));
 
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            String requestJson = "{}";
-            HttpEntity<String> httpEntity = new HttpEntity<>(requestJson, headers);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        String requestJson = "{}";
+        HttpEntity<String> httpEntity = new HttpEntity<>(requestJson, headers);
 
-            when(storeService.create(createStoreArgumentCaptor.capture())).thenThrow(new StoreNameCannotBeEmptyException());
-       
-            // When
-            ResponseEntity responseEntity = template.exchange(url,
-                    HttpMethod.POST,
-                    httpEntity,
-                    String.class,
-                    urlVariables);
+        when(storeService.create(createStoreArgumentCaptor.capture())).thenThrow(new StoreNameCannotBeEmptyException());
+   
+        // When
+        ResponseEntity responseEntity = template.exchange(url,
+                HttpMethod.POST,
+                httpEntity,
+                String.class,
+                urlVariables);
 
-            // Then
-            assertThat(responseEntity.getStatusCode()).isEqualTo(BAD_REQUEST);
-            assertThat(responseEntity.getBody()).isEqualTo("StoreNameCannotBeEmptyException");
-            
-            Store storeToCreate = createStoreArgumentCaptor.getValue();
-            assertThat(storeToCreate.getName()).isEqualTo(null);
-        }
-//    }
+        // Then
+        assertThat(responseEntity.getStatusCode()).isEqualTo(BAD_REQUEST);
+        assertThat(responseEntity.getBody()).isEqualTo("StoreNameCannotBeEmptyException");
+        
+        Store storeToCreate = createStoreArgumentCaptor.getValue();
+        assertThat(storeToCreate.getName()).isEqualTo(null);
+    }
+    
+    @Test
+    void givenGetStoreURLWithExistingId_whenCalled_thenReturnExistingStore() throws Exception {
+    	// GIVEN
+        String url = "http://localhost:{port}/stores/{id}";
+        int id = 1234;
+        String name = "BEC";
+        
+        Store existingStore = new Store(id, name);
+
+        Map<String, String> urlVariables = new HashMap<>();
+        urlVariables.put("port", String.valueOf(port));
+        urlVariables.put("id", String.valueOf(id));
+
+        HttpHeaders headers = new HttpHeaders();
+        HttpEntity<String> httpEntity = new HttpEntity<>(headers);
+        
+        when(storeService.get(getStoreArgumentCaptor.capture())).thenReturn(existingStore);
+          
+        // When
+        ResponseEntity<Store> responseEntity = template.exchange(url,
+                HttpMethod.GET,
+                httpEntity,
+                Store.class,
+                urlVariables);
+
+        // Then
+        assertThat(responseEntity.getStatusCode()).isEqualTo(OK);
+        
+        assertThat(getStoreArgumentCaptor.getValue()).isEqualTo(id);
+               
+        Store responseStore = responseEntity.getBody();
+        assertThat(responseStore.getId()).isEqualTo(existingStore.getId());
+        assertThat(responseStore.getName()).isEqualTo(existingStore.getName());
+    }
+    
+    @Test
+    void givenGetStoreURLWithNotExistingId_whenCalled_thenReturnExistingStore() throws Exception {
+    	// GIVEN
+        String url = "http://localhost:{port}/stores/{id}";
+        int id = 1234;
+        String name = "BEC";
+        
+        Store existingStore = new Store(id, name);
+
+        Map<String, String> urlVariables = new HashMap<>();
+        urlVariables.put("port", String.valueOf(port));
+        urlVariables.put("id", String.valueOf(id));
+
+        HttpHeaders headers = new HttpHeaders();
+        HttpEntity<String> httpEntity = new HttpEntity<>(headers);
+        
+        when(storeService.get(getStoreArgumentCaptor.capture())).thenThrow(new ModelNotFoundException());
+        
+        // When
+        ResponseEntity<String> responseEntity = template.exchange(url,
+                HttpMethod.GET,
+                httpEntity,
+                String.class,
+                urlVariables);
+
+        // Then
+        assertThat(responseEntity.getStatusCode()).isEqualTo(BAD_REQUEST);
+        assertThat(getStoreArgumentCaptor.getValue()).isEqualTo(id);
+        assertThat(responseEntity.getBody()).isEqualTo("ModelNotFoundException");    
+    }
 }

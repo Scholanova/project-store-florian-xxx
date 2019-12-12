@@ -19,14 +19,17 @@ public class StoreService {
     	return storeRepository.getById(id);
     }
     
-    public Boolean delete(Integer id) {
-    	int rows = storeRepository.deleteById(id);
-    	return rows > 0;
+    public void delete(Integer id) throws ModelNotFoundException {
+    	storeRepository.deleteById(id);
     }
     
-	public Boolean update(Store store) {
+	public Store update(Store store) throws ModelNotFoundException {
 		int rows = storeRepository.update(store);
-		return rows > 0;
+		if ( rows >  0 ) {
+			return storeRepository.getById(store.getId()); 
+		} else {
+			return null;
+		}
 	}
     
     public Store create(Store store) throws StoreNameCannotBeEmptyException {
