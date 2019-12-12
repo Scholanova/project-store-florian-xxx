@@ -6,7 +6,7 @@ On parle d'un projet de gestion d'inventaire de magasins.
 ## Les étapes du projet : 
 
 ### Partie 1
-- [ ] Pouvoir créer des magasins valides (avec un nom non vide)
+- [x] Pouvoir créer des magasins valides (avec un nom non vide)
 - [ ] Pouvoir visualiser un magasin existant
 - [ ] Pouvoir supprimer un magasin existant
 - [ ] BONUS Pouvoir mettre à jour un magasin existant (modifier son nom)
