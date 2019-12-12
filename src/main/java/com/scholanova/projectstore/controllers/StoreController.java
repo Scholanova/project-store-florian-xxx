@@ -2,12 +2,15 @@ package com.scholanova.projectstore.controllers;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
 
+import com.scholanova.projectstore.exceptions.ModelNotFoundException;
 import com.scholanova.projectstore.exceptions.StoreNameCannotBeEmptyException;
 import com.scholanova.projectstore.models.Store;
 import com.scholanova.projectstore.services.StoreService;
@@ -22,8 +25,17 @@ public class StoreController {
     }
 
     @GetMapping(path = "/stores/{id}")
-    public Store getStation() {
-        return null;
+    public ResponseEntity<?> getStation(@PathVariable Integer id) {
+        try {
+        	return ResponseEntity.ok().body(storeService.get(id));
+        } catch (ModelNotFoundException e) {
+        	return ResponseEntity.badRequest().body("ModelNotFoundException");
+        }
+    }
+    
+    @DeleteMapping(path = "/stores/{id}")
+    public ResponseEntity<?> deleteStation(@PathVariable Integer id) {
+        return ResponseEntity.ok().body(storeService.delete(id));
     }
 
     @PostMapping(path = "/stores")
@@ -34,7 +46,11 @@ public class StoreController {
     	} catch (StoreNameCannotBeEmptyException e) {
     		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("StoreNameCannotBeEmptyException");
     	}
-        
+    }
+    
+    @PutMapping(path = "/stores")
+    public ResponseEntity<?> putStation(@RequestBody Store store) {
+        return ResponseEntity.ok().body(storeService.update(store));
     }
     
     

@@ -4,6 +4,7 @@ import com.scholanova.projectstore.exceptions.StoreNameCannotBeEmptyException;
 import com.scholanova.projectstore.models.Store;
 import com.scholanova.projectstore.services.StoreService;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -40,8 +41,8 @@ class StoreControllerTest {
     @Captor
     ArgumentCaptor<Store> createStoreArgumentCaptor;
 
-    @Nested
-    class Test_createStore {
+//    @Nested
+//    class Test_createStore {
 
         @Test
         void givenCorrectBody_whenCalled_createsStore() throws Exception {
@@ -110,5 +111,5 @@ class StoreControllerTest {
             Store storeToCreate = createStoreArgumentCaptor.getValue();
             assertThat(storeToCreate.getName()).isEqualTo(null);
         }
-    }
+//    }
 }
