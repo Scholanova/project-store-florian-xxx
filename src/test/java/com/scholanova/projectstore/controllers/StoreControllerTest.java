@@ -25,6 +25,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.OK;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -44,7 +45,9 @@ class StoreControllerTest {
     
     @Captor
     ArgumentCaptor<Integer> getStoreArgumentCaptor;
-
+    
+    @Captor
+    ArgumentCaptor<Integer> deleteStoreArgumentCaptor;
 
     @Test
     void givenCreateStoreURLCorrectBody_whenCalled_createsStore() throws Exception {
@@ -179,4 +182,60 @@ class StoreControllerTest {
         assertThat(getStoreArgumentCaptor.getValue()).isEqualTo(id);
         assertThat(responseEntity.getBody()).isEqualTo("ModelNotFoundException");    
     }
+    
+    @Test
+    void givenDeleteStoreURLWithExistingId_whenCalled_thenReturnNothing() throws Exception {
+    	// GIVEN
+        String url = "http://localhost:{port}/stores/{id}";
+        int id = 1234;
+        
+        Map<String, String> urlVariables = new HashMap<>();
+        urlVariables.put("port", String.valueOf(port));
+        urlVariables.put("id", String.valueOf(id));
+
+        HttpHeaders headers = new HttpHeaders();
+        HttpEntity<String> httpEntity = new HttpEntity<>(headers);
+        
+        doNothing().when(storeService).delete(deleteStoreArgumentCaptor.capture());
+        
+        // WHEN
+        ResponseEntity<Void> responseEntity = template.exchange(url,
+        		HttpMethod.DELETE,
+        		httpEntity,
+        		Void.class,
+        		urlVariables);
+        
+        // THEN
+        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+        assertThat(deleteStoreArgumentCaptor.getValue()).isEqualTo(id);
+    }
+    
+    @Test
+    void givenDeleteStoreURLWithNotExistingId_whenCalled_thenThrowException() throws Exception {
+    	// GIVEN
+        String url = "http://localhost:{port}/stores/{id}";
+        int id = 1234;
+        
+        Map<String, String> urlVariables = new HashMap<>();
+        urlVariables.put("port", String.valueOf(port));
+        urlVariables.put("id", String.valueOf(id));
+
+        HttpHeaders headers = new HttpHeaders();
+        HttpEntity<String> httpEntity = new HttpEntity<>(headers);
+        
+        doThrow(new ModelNotFoundException()).when(storeService).delete(deleteStoreArgumentCaptor.capture());
+        
+        // WHEN
+        ResponseEntity<String> responseEntity = template.exchange(url,
+        		HttpMethod.DELETE,
+        		httpEntity,
+        		String.class,
+        		urlVariables);
+        
+        // THEN
+        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(deleteStoreArgumentCaptor.getValue()).isEqualTo(id);
+        assertThat(responseEntity.getBody()).isEqualTo("ModelNotFoundException");
+    }
+    
 }
